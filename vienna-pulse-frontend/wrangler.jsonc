@@ -1,0 +1,10 @@
+{
+  "name": "vienna-pulse-frontend",
+  "compatibility_date": "2026-10-07",
+  "assets": {
+    "directory": "./dist/vienna-pulse-frontend/browser",
+    "not_found_handling": "single-page-application"
+  },
+  "routes": [{ "pattern": "pulse.vladdancea.com", "custom_domain": true }],
+  "observability": { "enabled": true }
+}

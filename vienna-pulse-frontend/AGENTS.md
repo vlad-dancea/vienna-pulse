@@ -57,3 +57,15 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Use the `providedIn: 'root'` option for singleton services
 - Prefer the `@Service` decorator over `@Injectable({providedIn: 'root'})` for new singleton services (Angular v22+)
 - Use the `inject()` function instead of constructor injection
+
+## Project Tooling
+
+- Tool versions (Angular CLI, pnpm, Wrangler) are pinned with mise in the repo root `mise.toml`. Use them as they are. Do not add Wrangler as a devDependency and do not upgrade pinned versions unless asked.
+- Package manager is pnpm. Never use npm or yarn to install packages.
+
+## Cloudflare Deployment
+
+- The app is a static SPA (no SSR) served by Cloudflare Workers static assets at https://pulse.vladdancea.com. Config lives in `wrangler.jsonc`.
+- Keep `assets.not_found_handling` set to `single-page-application`, otherwise deep links return 404.
+- Deploy with `pnpm ng build && wrangler deploy` from this folder. Do not use the beta `cf deploy`, it rewrites the config and drops the SPA setting.
+- Use the `cloudflare-docs` MCP server to check current Cloudflare docs before writing Wrangler config. The `cloudflare-api` MCP server needs OAuth on first use.
