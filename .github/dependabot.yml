@@ -1,0 +1,24 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 3
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: npm
+    directory: /vienna-pulse-frontend
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 3
+    groups:
+      angular:
+        patterns: ["@angular/*", "@angular-devkit/*", "@schematics/angular"]
+      dev-tooling:
+        dependency-type: development
+        exclude-patterns: ["@angular/*", "@angular-devkit/*"]
