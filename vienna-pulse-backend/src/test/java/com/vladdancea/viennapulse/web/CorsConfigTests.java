@@ -1,4 +1,4 @@
-package com.vladdancea.viennapulse.diagnostics;
+package com.vladdancea.viennapulse.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -13,25 +13,17 @@ import org.springframework.test.web.servlet.assertj.MockMvcTester;
 @SpringBootTest
 @Import(TestcontainersConfiguration.class)
 @AutoConfigureMockMvc
-class DbRoundtripControllerTests {
+class CorsConfigTests {
 
 	@Autowired
 	private MockMvcTester mvc;
 
 	@Test
-	void insertsAndDeletesOneRow() {
-		var result = mvc.post().uri("/api/diagnostics/db-roundtrip").exchange();
-		assertThat(result).hasStatusOk();
-		assertThat(result).bodyJson().extractingPath("$.inserted").isEqualTo(1);
-		assertThat(result).bodyJson().extractingPath("$.deleted").isEqualTo(1);
-	}
-
-	@Test
 	void allowsTheFrontendOrigin() {
 		assertThat(mvc.options()
-			.uri("/api/diagnostics/db-roundtrip")
+			.uri("/api/anything")
 			.header("Origin", "https://pulse.vladdancea.com")
-			.header("Access-Control-Request-Method", "POST"))
+			.header("Access-Control-Request-Method", "GET"))
 			.hasStatusOk()
 			.hasHeader("Access-Control-Allow-Origin", "https://pulse.vladdancea.com");
 	}
@@ -39,9 +31,9 @@ class DbRoundtripControllerTests {
 	@Test
 	void rejectsOtherOrigins() {
 		assertThat(mvc.options()
-			.uri("/api/diagnostics/db-roundtrip")
+			.uri("/api/anything")
 			.header("Origin", "https://evil.example")
-			.header("Access-Control-Request-Method", "POST"))
+			.header("Access-Control-Request-Method", "GET"))
 			.hasStatus(403);
 	}
 
