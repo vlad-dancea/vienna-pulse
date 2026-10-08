@@ -430,6 +430,9 @@ class GtfsZipImporter implements GtfsImporter {
 			if (sequence <= lastSequence) {
 				throw new GtfsImportException("Trip " + id + " stop_sequence " + sequence + " after " + lastSequence);
 			}
+			if (departure > GtfsTime.MAX_SECONDS) {
+				throw new GtfsImportException("Trip " + id + " runs past 48:00:00 at sequence " + sequence);
+			}
 			if (departure < arrival) {
 				throw new GtfsImportException("Trip " + id + " departs before it arrives at sequence " + sequence);
 			}
