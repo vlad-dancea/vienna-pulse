@@ -4,6 +4,7 @@ import java.sql.Array;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
@@ -55,6 +56,15 @@ class LineGeometryRepository {
 			.list();
 	}
 
+	Optional<ShapeRow> shape(long version, String shapeId) {
+		return jdbc.sql("SELECT shape_id, lats, lons, dists_m, length_m FROM shape WHERE feed_version_id = :version AND shape_id = :id")
+			.param("version", version)
+			.param("id", shapeId)
+			.query((rs, row) -> new ShapeRow(rs.getString("shape_id"), doubles(rs.getArray("lats")),
+					doubles(rs.getArray("lons")), doubles(rs.getArray("dists_m")), rs.getDouble("length_m")))
+			.optional();
+	}
+
 	private static double[] doubles(Array array) throws SQLException {
 		Double[] boxed = (Double[]) array.getArray();
 		double[] values = new double[boxed.length];
@@ -62,6 +72,9 @@ class LineGeometryRepository {
 			values[i] = boxed[i];
 		}
 		return values;
+	}
+
+	record ShapeRow(String shapeId, double[] lats, double[] lons, double[] distances, double lengthM) {
 	}
 
 	record LineRow(String line, int directionId, String color, String shapeId, double[] lats, double[] lons,
