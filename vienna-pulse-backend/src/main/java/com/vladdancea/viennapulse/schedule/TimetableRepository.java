@@ -58,9 +58,6 @@ class TimetableRepository {
 			.list();
 	}
 
-	record ActiveFeed(long id, ZoneId zone) {
-	}
-
 	record TripRow(int tripKey, String tripId, String line, int directionId, String headsign, String shapeId,
 			int firstDepartureS, int lastArrivalS) {
 	}
