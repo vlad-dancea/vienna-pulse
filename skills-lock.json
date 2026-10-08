@@ -13,6 +13,18 @@
       "skillPath": "skills/cloudflare/SKILL.md",
       "computedHash": "6f0a70840cad114f020e5950874f255b22e669f07036cf4f81d8f733ae0233a0"
     },
+    "gradle-kotlin-dsl-doctor": {
+      "source": "JetBrains/skills",
+      "sourceType": "github",
+      "skillPath": "gradle-kotlin-dsl-doctor/SKILL.md",
+      "computedHash": "179846dfccc41dd5d57fa22d0c4e7b7552537847905ae7d3495173f5dcca32cf"
+    },
+    "spring-boot-testing": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "skillPath": "skills/spring-boot-testing/SKILL.md",
+      "computedHash": "4e6153fd6eed64dfc6b0f9a2a38ef8e636a88977702a49f3c5691fafcc02d8a8"
+    },
     "web-perf": {
       "source": "cloudflare/skills",
       "sourceType": "github",
