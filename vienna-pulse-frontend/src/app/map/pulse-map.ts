@@ -25,7 +25,7 @@ const VIENNA: [number, number] = [16.372, 48.208];
   template: `
     <div
       #container
-      class="absolute inset-0"
+      class="h-full w-full"
       role="region"
       aria-label="Map of the Vienna U-Bahn network"
     ></div>

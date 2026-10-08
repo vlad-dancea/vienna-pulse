@@ -4,6 +4,16 @@
 @import 'tailwindcss/utilities.css';
 
 @import '@spartan-ng/brain/hlm-tailwind-preset.css';
+/* In the components layer, so Tailwind utilities can override MapLibre's own rules. */
+@import 'maplibre-gl/dist/maplibre-gl.css' layer(components);
+
+@layer components {
+  /* WCAG 1.4.1: links in the map attribution must not rely on color alone. */
+  .maplibregl-ctrl-attrib a {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+}
 /* You can add global styles to this file, and also import other style files */
 
 :root {
