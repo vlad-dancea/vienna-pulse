@@ -1,6 +1,14 @@
 spring:
   application:
     name: vienna-pulse-backend
+  # Connection settings come from the environment in production
+  # (deploy/compose.yaml) and from Testcontainers in tests and local runs.
+  datasource:
+    hikari:
+      maximum-pool-size: 5
+  flyway:
+    # Fail on misnamed migration files instead of silently skipping them.
+    validate-migration-naming: true
 
 management:
   endpoints:
