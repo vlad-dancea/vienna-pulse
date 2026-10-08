@@ -3,6 +3,7 @@ package com.vladdancea.viennapulse.gtfs;
 import java.net.URI;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.Set;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
@@ -15,6 +16,7 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
  * @param workDir directory for the downloaded zip
  * @param connectTimeout time allowed to open the connection
  * @param readTimeout longest pause allowed between two received chunks
+ * @param routeTypes GTFS route types to import, 1 = metro (U-Bahn only for now)
  * @param updater schedule of the feed update
  */
 @ConfigurationProperties("pulse.gtfs")
@@ -23,6 +25,7 @@ public record GtfsProperties(
 		@DefaultValue("${java.io.tmpdir}/vienna-pulse/gtfs") Path workDir,
 		@DefaultValue("10s") Duration connectTimeout,
 		@DefaultValue("60s") Duration readTimeout,
+		@DefaultValue("1") Set<Integer> routeTypes,
 		@DefaultValue Updater updater) {
 
 	/**

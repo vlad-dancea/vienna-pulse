@@ -1,0 +1,8 @@
+# Test-only overrides (loaded on top of the main application.yaml).
+# Tests never reach out to Wiener Linien on their own. Tests that need the
+# updater triggers switch them on explicitly.
+pulse:
+  gtfs:
+    updater:
+      on-startup: false
+      cron: "-"

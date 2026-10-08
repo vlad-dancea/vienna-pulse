@@ -15,6 +15,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -65,7 +66,7 @@ class GtfsDownloaderTests {
 		server.start();
 		URI url = URI.create("http://127.0.0.1:" + server.getAddress().getPort() + "/gtfs.zip");
 		downloader = new GtfsDownloader(RestClient.builder(),
-				new GtfsProperties(url, workDir, Duration.ofSeconds(2), Duration.ofSeconds(2), null));
+				new GtfsProperties(url, workDir, Duration.ofSeconds(2), Duration.ofSeconds(2), Set.of(1), null));
 	}
 
 	@AfterEach
