@@ -1,7 +1,8 @@
 # Production stack on the Hetzner VPS (/opt/vienna-pulse).
 # The deploy script fetches this file at the deployed commit, so changes
 # here go live with the next backend deploy. Secrets and BACKEND_TAG live
-# in /opt/vienna-pulse/.env on the server, never in this repo.
+# on the server (/opt/vienna-pulse/.env and /opt/vienna-pulse/secrets/),
+# never in this repo.
 name: vienna-pulse
 
 x-logging: &logging
@@ -21,6 +22,48 @@ services:
     mem_limit: 768m
     environment:
       TZ: Europe/Vienna
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/pulse
+      SPRING_DATASOURCE_USERNAME: pulse
+      # The password is a file, not an environment variable. Spring Boot reads
+      # every file in /run/secrets as a property named after the file.
+      SPRING_CONFIG_IMPORT: optional:configtree:/run/secrets/
+    secrets:
+      - source: db_app_password
+        target: spring.datasource.password
+    networks: [default, db]
+    depends_on:
+      db:
+        condition: service_healthy
+    logging: *logging
+
+  # PostgreSQL 18 with the TimescaleDB extension. Plain Postgres until a
+  # migration creates the first hypertable.
+  db:
+    image: timescale/timescaledb:2.30.2-pg18@sha256:e72689191e1c977892c53d6f2c344dbc4a9657a867dc8cc1899229f9d3672b2e
+    restart: unless-stopped
+    command: ["postgres", "-c", "timescaledb.telemetry_level=off"]
+    environment:
+      TZ: Europe/Vienna
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_admin_password
+      # Read by timescaledb-tune on the first start. Matches mem_limit.
+      TS_TUNE_MEMORY: 1GB
+      TS_TUNE_NUM_CPUS: "2"
+    secrets: [db_admin_password, db_app_password]
+    configs:
+      - source: db_init
+        target: /docker-entrypoint-initdb.d/010_create_app_role.sql
+    volumes:
+      # Postgres 18 images keep the data in a versioned subfolder of this path.
+      - db-data:/var/lib/postgresql
+    networks: [db]
+    shm_size: 256m
+    mem_limit: 1g
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "pulse", "-d", "pulse"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 30s
     logging: *logging
 
   # Cloudflare Tunnel "vienna-pulse": api.pulse.vladdancea.com -> http://backend:8080.
@@ -35,3 +78,27 @@ services:
       - backend
     mem_limit: 128m
     logging: *logging
+
+networks:
+  # Internal network: the database has no internet access and no published port.
+  db:
+    internal: true
+
+volumes:
+  db-data:
+
+secrets:
+  db_admin_password:
+    file: ./secrets/db_admin_password
+  db_app_password:
+    file: ./secrets/db_app_password
+
+configs:
+  # Runs once, on the first start with an empty volume. The app role owns the
+  # pulse database but is not a superuser. The TimescaleDB image installs the
+  # extension in template1 before this script runs, so pulse inherits it.
+  db_init:
+    content: |
+      \set app_password `cat /run/secrets/db_app_password`
+      CREATE ROLE pulse LOGIN PASSWORD :'app_password';
+      CREATE DATABASE pulse OWNER pulse;
