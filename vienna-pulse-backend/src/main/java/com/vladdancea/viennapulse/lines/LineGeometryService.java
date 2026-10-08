@@ -58,13 +58,19 @@ public class LineGeometryService {
 	}
 
 	private static Feature feature(LineRow row) {
-		double[][] coordinates = new double[row.lats().length][];
-		for (int i = 0; i < coordinates.length; i++) {
-			coordinates[i] = new double[] { round(row.lons()[i]), round(row.lats()[i]) };
-		}
+		double[][] coordinates = coordinates(row.lats(), row.lons());
 		String color = row.color() == null ? null : "#" + row.color().toUpperCase();
 		return new Feature(new LineString(coordinates),
 				new Properties(row.line(), row.directionId(), color, row.shapeId(), Math.round(row.lengthM() * 10) / 10.0));
+	}
+
+	/** GeoJSON positions, {@code [lon, lat]}. */
+	static double[][] coordinates(double[] lats, double[] lons) {
+		double[][] coordinates = new double[lats.length][];
+		for (int i = 0; i < coordinates.length; i++) {
+			coordinates[i] = new double[] { round(lons[i]), round(lats[i]) };
+		}
+		return coordinates;
 	}
 
 	/** Six decimals are about 0.1 m, more than enough for drawing. */
