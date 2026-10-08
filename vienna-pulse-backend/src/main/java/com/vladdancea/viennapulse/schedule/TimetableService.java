@@ -4,8 +4,8 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
-import com.vladdancea.viennapulse.schedule.TimetableRepository.ActiveFeed;
 import com.vladdancea.viennapulse.schedule.TimetableRepository.TripRow;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +17,11 @@ public class TimetableService {
 
 	TimetableService(TimetableRepository repository) {
 		this.repository = repository;
+	}
+
+	/** The active feed version, empty while no feed is imported. */
+	public Optional<ActiveFeed> activeFeed() {
+		return repository.activeFeed();
 	}
 
 	/**

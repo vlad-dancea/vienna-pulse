@@ -45,18 +45,7 @@ class TimetableServiceTests {
 
 	@BeforeEach
 	void importTheTestFeed() throws IOException {
-		jdbc.sql("TRUNCATE gtfs_feed_version, stop_time CASCADE").update();
-		long version = jdbc
-			.sql("INSERT INTO gtfs_feed_version (sha256, size_bytes) VALUES (repeat('t', 64), 1) RETURNING id")
-			.query(Long.class)
-			.single();
-		Path zip = GtfsTestFeed.zip(dir, GtfsTestFeed.files());
-		transaction.executeWithoutResult(status -> {
-			importer.importFeed(version, zip);
-			jdbc.sql("UPDATE gtfs_feed_version SET active = true, imported_at = now() WHERE id = :id")
-				.param("id", version)
-				.update();
-		});
+		GtfsTestFeed.importActive(dir, importer, jdbc, transaction);
 	}
 
 	@Test

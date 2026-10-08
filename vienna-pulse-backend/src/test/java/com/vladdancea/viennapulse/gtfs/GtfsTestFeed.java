@@ -10,6 +10,9 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.transaction.support.TransactionTemplate;
+
 /**
  * A small hand-made GTFS feed for tests: U1 with trips t1 (weekdays 04:57 to 05:03), t2
  * (weekdays 24:58 to 25:10, after midnight) and t4 (24 December only), plus bus 13A (t3),
@@ -82,6 +85,28 @@ public final class GtfsTestFeed {
 				"XMAS","20261224","1"
 				""");
 		return files;
+	}
+
+	/**
+	 * Empties the GTFS tables, imports this feed and makes it the active version.
+	 *
+	 * @return the feed version id
+	 */
+	public static long importActive(Path dir, GtfsImporter importer, JdbcClient jdbc, TransactionTemplate transaction)
+			throws IOException {
+		jdbc.sql("TRUNCATE gtfs_feed_version, stop_time CASCADE").update();
+		long version = jdbc
+			.sql("INSERT INTO gtfs_feed_version (sha256, size_bytes) VALUES (repeat('t', 64), 1) RETURNING id")
+			.query(Long.class)
+			.single();
+		Path zip = zip(dir, files());
+		transaction.executeWithoutResult(status -> {
+			importer.importFeed(version, zip);
+			jdbc.sql("UPDATE gtfs_feed_version SET active = true, imported_at = now() WHERE id = :id")
+				.param("id", version)
+				.update();
+		});
+		return version;
 	}
 
 	public static Path zip(Path dir, Map<String, String> files) throws IOException {
