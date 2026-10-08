@@ -1,0 +1,21 @@
+# Production stack on the Hetzner VPS (/opt/vienna-pulse).
+# The deploy script fetches this file at the deployed commit, so changes
+# here go live with the next backend deploy. Secrets and BACKEND_TAG live
+# in /opt/vienna-pulse/.env on the server, never in this repo.
+name: vienna-pulse
+
+services:
+  backend:
+    image: ghcr.io/vlad-dancea/vienna-pulse-backend:${BACKEND_TAG:?BACKEND_TAG is not set}
+    restart: unless-stopped
+    ports:
+      # Localhost only. Docker-published ports bypass the host firewall.
+      - "127.0.0.1:8080:8080"
+    mem_limit: 768m
+    environment:
+      TZ: Europe/Vienna
+    logging:
+      driver: local
+      options:
+        max-size: 10m
+        max-file: "5"

@@ -22,3 +22,20 @@ updates:
       dev-tooling:
         dependency-type: development
         exclude-patterns: ["@angular/*", "@angular-devkit/*"]
+
+  - package-ecosystem: gradle
+    directory: /vienna-pulse-backend
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 3
+    groups:
+      spring:
+        patterns: ["org.springframework*"]
+
+  - package-ecosystem: docker
+    directory: /vienna-pulse-backend
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 3

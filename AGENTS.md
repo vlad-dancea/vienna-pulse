@@ -5,6 +5,8 @@ Live and historical twin of the Wiener Linien network: live map, punctuality per
 ## Repository Layout
 
 - `vienna-pulse-frontend/`: Angular 22 app (zoneless, standalone, Tailwind CSS 4, Vitest, no SSR). Run Angular and pnpm commands from this folder.
+- `vienna-pulse-backend/`: Spring Boot 4 app (Java 25, Gradle Kotlin DSL). Run Gradle from this folder.
+- `deploy/`: production `compose.yaml` and the VPS deploy scripts (`deploy/vps/`).
 - `.github/workflows/`: CI and deployment.
 - `probes/`: local API experiments and raw data. Gitignored, never commit or move it into tracked folders.
 - Agent setup lives at this root: `AGENTS.md`, `.agents/skills/` (with `.claude/skills/` symlinks), `.mcp.json`, `.codex/config.toml`, `skills-lock.json`.
@@ -21,6 +23,15 @@ Live and historical twin of the Wiener Linien network: live map, punctuality per
 - Keep `assets.not_found_handling` set to `single-page-application`, otherwise deep links return 404.
 - Pushes to `main` deploy automatically through `.github/workflows/frontend.yml`. Manual deploy: `pnpm ng build && wrangler deploy` inside `vienna-pulse-frontend/`. Do not use the beta `cf deploy`, it rewrites the config and drops the SPA setting.
 - Use the `cloudflare-docs` MCP server to check current Cloudflare docs before writing Wrangler config. The `cloudflare-api` MCP server needs OAuth on first use.
+
+## Backend Deployment
+
+- The backend runs as a Docker container on the Hetzner VPS (Debian 13), stack in `/opt/vienna-pulse` defined by `deploy/compose.yaml`. It listens on `127.0.0.1:8080` only.
+- Pushes to `main` that touch the backend or `deploy/` run `.github/workflows/backend.yml`: Gradle build and tests, image push to `ghcr.io/vlad-dancea/vienna-pulse-backend:<sha>`, then SSH to the `deploy` user.
+- The `deploy` user's key is a forced command: it can only run `/usr/local/sbin/pulse-deploy` (source: `deploy/vps/pulse-deploy`) with `deploy <sha>`. The script checks the commit is on `main`, fetches `deploy/compose.yaml` at that commit, starts the new image, waits for `/actuator/health` to be UP and rolls back to the previous tag if it is not.
+- Changes to `deploy/vps/pulse-deploy` are not applied automatically. Reinstall it on the server by hand (`install -m 755 pulse-deploy /usr/local/sbin/`).
+- Server secrets and the current `BACKEND_TAG` live in `/opt/vienna-pulse/.env`. Never commit secrets to this public repo.
+- GitHub environment `production` holds `VPS_DEPLOY_KEY` (secret), `VPS_HOST` and `VPS_KNOWN_HOSTS` (variables).
 
 ## Frontend Guidelines (vienna-pulse-frontend)
 

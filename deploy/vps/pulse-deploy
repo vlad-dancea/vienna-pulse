@@ -1,0 +1,70 @@
+#!/bin/bash
+# Deploys one Vienna Pulse backend build on the VPS.
+# Installed as /usr/local/sbin/pulse-deploy (root). GitHub Actions reaches it
+# through the "deploy" user's forced-command SSH key, which can run nothing else.
+# Input: SSH_ORIGINAL_COMMAND="deploy <40-char commit sha>"
+set -euo pipefail
+
+REPO=vlad-dancea/vienna-pulse
+IMAGE=ghcr.io/vlad-dancea/vienna-pulse-backend
+DIR=/opt/vienna-pulse
+HEALTH_URL=http://127.0.0.1:8080/actuator/health
+HEALTH_TIMEOUT_S=120
+
+log() { echo "[$(date -Is)] $*"; }
+fail() { log "ERROR: $*" >&2; exit 1; }
+
+cmd=${SSH_ORIGINAL_COMMAND:-}
+[[ $cmd =~ ^deploy\ ([0-9a-f]{40})$ ]] || { echo "usage: deploy <commit sha>" >&2; exit 2; }
+sha=${BASH_REMATCH[1]}
+
+exec 9>/run/lock/pulse-deploy.lock
+flock -w 600 9 || fail "another deploy is still running"
+
+# Forks share commit objects with the parent repo, so a SHA alone proves
+# nothing. Only deploy commits that are part of main.
+status=$(curl -fsS --retry 3 "https://api.github.com/repos/$REPO/compare/main...$sha" | jq -r .status) \
+  || fail "could not check $sha against main"
+[[ $status == behind || $status == identical ]] || fail "$sha is not on main (status: $status)"
+
+mkdir -p "$DIR"
+cd "$DIR"
+touch .env
+chmod 600 .env
+
+prev_tag=$(sed -n 's/^BACKEND_TAG=//p' .env)
+set_tag() { sed -i '/^BACKEND_TAG=/d' .env; echo "BACKEND_TAG=$1" >> .env; }
+
+log "deploying $sha (previous: ${prev_tag:-none})"
+curl -fsS --retry 3 -o compose.yaml.new "https://raw.githubusercontent.com/$REPO/$sha/deploy/compose.yaml" \
+  || fail "could not fetch deploy/compose.yaml at $sha"
+docker pull -q "$IMAGE:$sha" || fail "image $IMAGE:$sha not found"
+
+[[ -f compose.yaml ]] && cp compose.yaml compose.yaml.prev
+mv compose.yaml.new compose.yaml
+set_tag "$sha"
+healthy=false
+if docker compose config -q && docker compose up -d --remove-orphans backend; then
+  for _ in $(seq 1 $((HEALTH_TIMEOUT_S / 2))); do
+    if curl -fsS "$HEALTH_URL" 2>/dev/null | grep -q '"status":"UP"'; then healthy=true; break; fi
+    sleep 2
+  done
+fi
+
+if [[ $healthy != true ]]; then
+  log "health check failed, last logs:"
+  docker compose logs --tail 80 backend || true
+  if [[ -n $prev_tag && -f compose.yaml.prev ]]; then
+    log "rolling back to $prev_tag"
+    mv compose.yaml.prev compose.yaml
+    set_tag "$prev_tag"
+    docker compose up -d --remove-orphans backend
+  fi
+  fail "deploy of $sha failed"
+fi
+
+echo "$(date -Is) $sha" >> deploys.log
+# Keep the current and previous backend images, drop older ones.
+docker image ls "$IMAGE" --format '{{.Tag}}' | grep -vx -e "$sha" -e "${prev_tag:-none}" \
+  | xargs -r -I{} docker image rm "$IMAGE:{}" >/dev/null || true
+log "deployed $sha, health UP"
