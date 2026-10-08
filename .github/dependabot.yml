@@ -16,6 +16,10 @@ updates:
       interval: weekly
     cooldown:
       default-days: 3
+    ignore:
+      # Angular pins TypeScript to one minor (e.g. >=6.0 <6.1). ng update bumps it with Angular.
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
     groups:
       angular:
         patterns: ["@angular/*", "@angular-devkit/*", "@schematics/angular"]
