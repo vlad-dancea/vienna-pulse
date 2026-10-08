@@ -61,7 +61,7 @@ class GtfsFeedUpdaterTests {
 
 	@BeforeEach
 	void emptyDatabase() {
-		jdbc.sql("TRUNCATE gtfs_feed_version").update();
+		jdbc.sql("TRUNCATE gtfs_feed_version, stop_time CASCADE").update();
 	}
 
 	@Test
