@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 import javax.sql.DataSource;
@@ -133,11 +134,12 @@ public class GtfsFeedUpdater {
 			}
 			case Downloaded feed -> {
 				long id = versions.saveDownloaded(feed);
-				transaction.executeWithoutResult(status -> {
+				List<Long> deleted = transaction.execute(status -> {
 					importer.importFeed(id, feed.file());
 					versions.activate(id);
+					return versions.deleteOldVersions();
 				});
-				log.info("Imported GTFS feed version {} (sha256 {})", id, feed.sha256());
+				log.info("Imported GTFS feed version {} (sha256 {}), deleted old versions {}", id, feed.sha256(), deleted);
 				yield Outcome.IMPORTED;
 			}
 		};

@@ -32,8 +32,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-@SpringBootTest(properties = { "pulse.gtfs.updater.enabled=true", "pulse.gtfs.updater.cron=-",
-		"pulse.gtfs.updater.on-startup=false" })
+@SpringBootTest
 @Import(TestcontainersConfiguration.class)
 class GtfsFeedUpdaterTests {
 
@@ -110,6 +109,23 @@ class GtfsFeedUpdaterTests {
 
 		assertThat(activeSha256()).isEqualTo(FEED_B.sha256());
 		assertThat(jdbc.sql("SELECT count(*) FROM gtfs_feed_version").query(Long.class).single()).isEqualTo(2);
+	}
+
+	@Test
+	void keepsOnlyTheActiveAndThePreviousVersion() {
+		FeedValidators v3 = new FeedValidators(Instant.parse("2026-12-01T04:00:00Z"), "\"v3\"");
+		Downloaded feedC = new Downloaded(Path.of("gtfs.zip"), "c".repeat(64), 300, v3);
+		given(downloader.download(FeedValidators.NONE)).willReturn(FEED_A);
+		updater.update(false);
+		given(downloader.download(V1)).willReturn(FEED_B);
+		updater.update(false);
+		given(downloader.download(V2)).willReturn(feedC);
+
+		assertThat(updater.update(false)).isEqualTo(Outcome.IMPORTED);
+
+		assertThat(jdbc.sql("SELECT sha256 FROM gtfs_feed_version ORDER BY id").query(String.class).list())
+			.containsExactly(FEED_B.sha256(), feedC.sha256());
+		assertThat(activeSha256()).isEqualTo(feedC.sha256());
 	}
 
 	@Test

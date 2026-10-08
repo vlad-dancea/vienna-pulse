@@ -1,6 +1,7 @@
 package com.vladdancea.viennapulse.gtfs;
 
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.Optional;
 
 import com.vladdancea.viennapulse.gtfs.GtfsDownloadResult.Downloaded;
@@ -63,6 +64,26 @@ class GtfsFeedVersionRepository {
 		jdbc.sql("UPDATE gtfs_feed_version SET active = true, imported_at = now() WHERE id = :id")
 			.param("id", id)
 			.update();
+	}
+
+	/**
+	 * Deletes imported versions except the active one and the newest inactive one (kept as a
+	 * fallback). {@code stop_time} has no foreign keys, so its rows are deleted explicitly.
+	 *
+	 * @return the deleted version ids
+	 */
+	List<Long> deleteOldVersions() {
+		List<Long> old = jdbc.sql("""
+				SELECT id FROM gtfs_feed_version
+				WHERE NOT active AND imported_at IS NOT NULL
+				ORDER BY imported_at DESC, id DESC
+				OFFSET 1
+				""").query(Long.class).list();
+		if (!old.isEmpty()) {
+			jdbc.sql("DELETE FROM stop_time WHERE feed_version_id IN (:ids)").param("ids", old).update();
+			jdbc.sql("DELETE FROM gtfs_feed_version WHERE id IN (:ids)").param("ids", old).update();
+		}
+		return old;
 	}
 
 	private static Timestamp timestamp(FeedValidators validators) {
