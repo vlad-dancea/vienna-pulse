@@ -13,7 +13,8 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
  * and when the backend checks for a new one.
  *
  * @param feedUrl the GTFS zip published by Wiener Linien
- * @param workDir directory for the downloaded zip
+ * @param workDir directory for the downloaded zip, set in application.yaml (placeholders do
+ * not resolve in {@code @DefaultValue})
  * @param connectTimeout time allowed to open the connection
  * @param readTimeout longest pause allowed between two received chunks
  * @param routeTypes GTFS route types to import, 1 = metro (U-Bahn only for now)
@@ -22,7 +23,7 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
 @ConfigurationProperties("pulse.gtfs")
 public record GtfsProperties(
 		@DefaultValue("https://www.wienerlinien.at/ogd_realtime/doku/ogd/gtfs/gtfs.zip") URI feedUrl,
-		@DefaultValue("${java.io.tmpdir}/vienna-pulse/gtfs") Path workDir,
+		Path workDir,
 		@DefaultValue("10s") Duration connectTimeout,
 		@DefaultValue("60s") Duration readTimeout,
 		@DefaultValue("1") Set<Integer> routeTypes,

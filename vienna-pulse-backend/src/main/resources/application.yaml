@@ -20,3 +20,6 @@ pulse:
   cors:
     # Browser origins allowed to call /api/**: production SPA and the Angular dev server.
     allowed-origins: https://pulse.vladdancea.com,http://localhost:4200
+  gtfs:
+    # Where the downloaded zip lives during the import. Temporary, the data ends up in the DB.
+    work-dir: ${java.io.tmpdir}/vienna-pulse/gtfs
