@@ -20,3 +20,7 @@ pulse:
   cors:
     # Browser origins allowed to call /api/**: production SPA and the Angular dev server.
     allowed-origins: https://pulse.vladdancea.com,http://localhost:4200
+  gtfs:
+    updater:
+      # Off until the importer exists (V2). Without it there is nothing to import into.
+      enabled: false

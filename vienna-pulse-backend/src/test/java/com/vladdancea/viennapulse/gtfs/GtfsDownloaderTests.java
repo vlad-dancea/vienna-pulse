@@ -65,7 +65,7 @@ class GtfsDownloaderTests {
 		server.start();
 		URI url = URI.create("http://127.0.0.1:" + server.getAddress().getPort() + "/gtfs.zip");
 		downloader = new GtfsDownloader(RestClient.builder(),
-				new GtfsProperties(url, workDir, Duration.ofSeconds(2), Duration.ofSeconds(2)));
+				new GtfsProperties(url, workDir, Duration.ofSeconds(2), Duration.ofSeconds(2), null));
 	}
 
 	@AfterEach
