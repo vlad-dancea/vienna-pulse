@@ -1,7 +1,13 @@
 package com.vladdancea.viennapulse.gtfs;
 
 /** Parses GTFS times. They can pass 24:00 for trips that run after midnight. */
-final class GtfsTime {
+public final class GtfsTime {
+
+	/**
+	 * Latest time of day the import accepts (48:00:00). Wiener Linien goes up to about 29:00.
+	 * The bound lets the timetable look back a fixed number of service days.
+	 */
+	public static final int MAX_SECONDS = 48 * 3600;
 
 	private GtfsTime() {
 	}
