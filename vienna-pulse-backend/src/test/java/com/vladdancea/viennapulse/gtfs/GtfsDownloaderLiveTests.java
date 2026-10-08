@@ -29,7 +29,7 @@ class GtfsDownloaderLiveTests {
 	@Test
 	void downloadsTheRealFeedAndThenGetsNotModified() {
 		GtfsDownloader downloader = new GtfsDownloader(RestClient.builder(),
-				new GtfsProperties(FEED_URL, workDir, Duration.ofSeconds(10), Duration.ofSeconds(60)));
+				new GtfsProperties(FEED_URL, workDir, Duration.ofSeconds(10), Duration.ofSeconds(60), null));
 
 		GtfsDownloadResult first = downloader.download(FeedValidators.NONE);
 		assertThat(first).isInstanceOf(Downloaded.class);
