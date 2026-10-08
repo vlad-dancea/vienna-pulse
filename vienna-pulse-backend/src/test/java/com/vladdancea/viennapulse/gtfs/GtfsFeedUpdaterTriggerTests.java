@@ -21,7 +21,7 @@ import org.springframework.scheduling.config.ScheduledTaskHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 /** Checks what starts an update: the startup run and the daily cron. */
-@SpringBootTest(properties = "pulse.gtfs.updater.enabled=true")
+@SpringBootTest(properties = { "pulse.gtfs.updater.on-startup=true", "pulse.gtfs.updater.cron=0 0 7 * * *" })
 @Import(TestcontainersConfiguration.class)
 class GtfsFeedUpdaterTriggerTests {
 

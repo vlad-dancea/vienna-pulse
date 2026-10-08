@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.net.URI;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.Set;
 
 import com.vladdancea.viennapulse.gtfs.GtfsDownloadResult.Downloaded;
 import com.vladdancea.viennapulse.gtfs.GtfsDownloadResult.FeedValidators;
@@ -29,7 +30,7 @@ class GtfsDownloaderLiveTests {
 	@Test
 	void downloadsTheRealFeedAndThenGetsNotModified() {
 		GtfsDownloader downloader = new GtfsDownloader(RestClient.builder(),
-				new GtfsProperties(FEED_URL, workDir, Duration.ofSeconds(10), Duration.ofSeconds(60), null));
+				new GtfsProperties(FEED_URL, workDir, Duration.ofSeconds(10), Duration.ofSeconds(60), Set.of(1), null));
 
 		GtfsDownloadResult first = downloader.download(FeedValidators.NONE);
 		assertThat(first).isInstanceOf(Downloaded.class);
