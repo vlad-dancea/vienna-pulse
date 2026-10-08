@@ -1,7 +1,10 @@
 import type { GeoJSONSource, Map as MapLibreMap } from 'maplibre-gl';
 import { lineColor } from './line-colors';
-import { distanceAt, isOnMap, pointAt } from './train-motion';
-import type { Train, TripShape } from './trains';
+import { distanceAt, isOnMap } from './train-motion';
+import type { Train } from './trains';
+
+/** Where a train is when it has travelled `distM` along its trip shape. */
+export type TrainPath = (distM: number) => [number, number];
 
 const SOURCE = 'trains';
 
@@ -22,7 +25,7 @@ const REDUCED_MOTION_INTERVAL_MS = 1000;
  */
 export class TrainLayer {
   private trains: readonly Train[] = [];
-  private shapes: ReadonlyMap<string, TripShape> = new Map();
+  private paths: ReadonlyMap<string, TrainPath> = new Map();
   private clockOffsetS = 0;
   private frameId: number | null = null;
   private lastDraw = 0;
@@ -57,15 +60,16 @@ export class TrainLayer {
   }
 
   /**
+   * @param paths one per shape id, built by `trainPaths`
    * @param clockOffsetS server time minus browser time, corrects a wrong local clock
    */
   update(
     trains: readonly Train[],
-    shapes: ReadonlyMap<string, TripShape>,
+    paths: ReadonlyMap<string, TrainPath>,
     clockOffsetS: number,
   ): void {
     this.trains = trains;
-    this.shapes = shapes;
+    this.paths = paths;
     this.clockOffsetS = clockOffsetS;
     this.draw();
   }
@@ -86,9 +90,8 @@ export class TrainLayer {
   /** Trains currently drawn, for the summary shown to users. */
   visibleCount(): number {
     const now = this.now();
-    return this.trains.filter(
-      (train) => this.shapes.has(train.shapeId) && isOnMap(train.stops, now),
-    ).length;
+    return this.trains.filter((train) => this.paths.has(train.shapeId) && isOnMap(train.stops, now))
+      .length;
   }
 
   private readonly frame = (time: number) => {
@@ -108,14 +111,14 @@ export class TrainLayer {
     const now = this.now();
     const features: TrainFeature[] = [];
     for (const train of this.trains) {
-      const shape = this.shapes.get(train.shapeId);
-      if (!shape || !isOnMap(train.stops, now)) {
+      const path = this.paths.get(train.shapeId);
+      if (!path || !isOnMap(train.stops, now)) {
         continue;
       }
       features.push({
         type: 'Feature',
         id: train.id,
-        geometry: { type: 'Point', coordinates: pointAt(shape, distanceAt(train.stops, now)) },
+        geometry: { type: 'Point', coordinates: path(distanceAt(train.stops, now)) },
         properties: { line: train.line, headsign: train.headsign, neon: lineColor(train.line) },
       });
     }

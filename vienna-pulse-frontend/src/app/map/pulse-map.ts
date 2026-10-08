@@ -13,7 +13,8 @@ import { type GeoJSONSource, Map as MapLibreMap, setWorkerUrl } from 'maplibre-g
 import { loadBasemapStyle } from './basemap';
 import { LinesApi } from './lines-api';
 import { boundsOf, LINE_LAYERS, LINES_SOURCE, linesForMap } from './map-layers';
-import { TrainLayer } from './train-layer';
+import { TrainLayer, type TrainPath } from './train-layer';
+import { trainPaths } from './train-paths';
 import type { TrainsResponse, TripShape } from './trains';
 import { TrainsApi } from './trains-api';
 
@@ -66,6 +67,7 @@ export class PulseMap {
   private readonly shapes = signal<ReadonlyMap<string, TripShape>>(new Map());
   private readonly visibleTrains = signal<number | null>(null);
   private trainLayer: TrainLayer | null = null;
+  private readonly pathCache = new Map<string, TrainPath>();
 
   protected readonly summary = computed(() => {
     const count = this.visibleTrains();
@@ -169,11 +171,13 @@ export class PulseMap {
       const map = this.map();
       const response = this.trains();
       const shapes = this.shapes();
+      const lines = this.linesApi.lines.hasValue() ? this.linesApi.lines.value() : undefined;
       if (!map || !response || !this.trainLayer) {
         return;
       }
+      const paths = trainPaths(lines, response.trains, shapes, this.pathCache);
       const clockOffsetS = response.serverTime - Date.now() / 1000;
-      this.trainLayer.update(response.trains, shapes, clockOffsetS);
+      this.trainLayer.update(response.trains, paths, clockOffsetS);
       this.updateSummary();
     });
   }
