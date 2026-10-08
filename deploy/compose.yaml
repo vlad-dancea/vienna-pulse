@@ -4,18 +4,34 @@
 # in /opt/vienna-pulse/.env on the server, never in this repo.
 name: vienna-pulse
 
+x-logging: &logging
+  driver: local
+  options:
+    max-size: 10m
+    max-file: "5"
+
 services:
   backend:
     image: ghcr.io/vlad-dancea/vienna-pulse-backend:${BACKEND_TAG:?BACKEND_TAG is not set}
     restart: unless-stopped
     ports:
-      # Localhost only. Docker-published ports bypass the host firewall.
+      # Localhost only, for the deploy health check. Docker-published ports
+      # bypass the host firewall. Public traffic comes through the tunnel.
       - "127.0.0.1:8080:8080"
     mem_limit: 768m
     environment:
       TZ: Europe/Vienna
-    logging:
-      driver: local
-      options:
-        max-size: 10m
-        max-file: "5"
+    logging: *logging
+
+  # Cloudflare Tunnel "vienna-pulse": api.pulse.vladdancea.com -> http://backend:8080.
+  # Routes are managed in Cloudflare (remotely managed tunnel), not here.
+  tunnel:
+    image: cloudflare/cloudflared:2026.10.0
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:?TUNNEL_TOKEN is not set}
+    depends_on:
+      - backend
+    mem_limit: 128m
+    logging: *logging

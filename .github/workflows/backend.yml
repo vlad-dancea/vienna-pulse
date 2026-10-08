@@ -101,6 +101,7 @@ jobs:
     timeout-minutes: 10
     environment:
       name: production
+      url: https://api.pulse.vladdancea.com/actuator/health
     concurrency:
       group: backend-deploy-production
       cancel-in-progress: false
@@ -118,3 +119,9 @@ jobs:
           # The key is a forced command on the server: it can only run the deploy script.
           ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o BatchMode=yes \
             "deploy@${HOST}" "deploy ${GITHUB_SHA}"
+
+      - name: Smoke test
+        run: |
+          curl --fail --silent --show-error --retry 5 --retry-delay 3 --retry-all-errors \
+            https://api.pulse.vladdancea.com/actuator/health | grep -q '"status":"UP"' \
+            || { echo "::error::API is not reachable through the tunnel"; exit 1; }

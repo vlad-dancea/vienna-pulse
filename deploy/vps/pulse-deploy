@@ -44,7 +44,7 @@ docker pull -q "$IMAGE:$sha" || fail "image $IMAGE:$sha not found"
 mv compose.yaml.new compose.yaml
 set_tag "$sha"
 healthy=false
-if docker compose config -q && docker compose up -d --remove-orphans backend; then
+if docker compose config -q && docker compose up -d --remove-orphans; then
   for _ in $(seq 1 $((HEALTH_TIMEOUT_S / 2))); do
     if curl -fsS "$HEALTH_URL" 2>/dev/null | grep -q '"status":"UP"'; then healthy=true; break; fi
     sleep 2
@@ -58,7 +58,7 @@ if [[ $healthy != true ]]; then
     log "rolling back to $prev_tag"
     mv compose.yaml.prev compose.yaml
     set_tag "$prev_tag"
-    docker compose up -d --remove-orphans backend
+    docker compose up -d --remove-orphans
   fi
   fail "deploy of $sha failed"
 fi

@@ -31,6 +31,7 @@ Live and historical twin of the Wiener Linien network: live map, punctuality per
 - The `deploy` user's key is a forced command: it can only run `/usr/local/sbin/pulse-deploy` (source: `deploy/vps/pulse-deploy`) with `deploy <sha>`. The script checks the commit is on `main`, fetches `deploy/compose.yaml` at that commit, starts the new image, waits for `/actuator/health` to be UP and rolls back to the previous tag if it is not.
 - Changes to `deploy/vps/pulse-deploy` are not applied automatically. Reinstall it on the server by hand (`install -m 755 pulse-deploy /usr/local/sbin/`).
 - Server secrets and the current `BACKEND_TAG` live in `/opt/vienna-pulse/.env`. Never commit secrets to this public repo.
+- Public traffic goes through the Cloudflare Tunnel `vienna-pulse` (remotely managed, `cloudflared` container in `deploy/compose.yaml`): https://api.pulse.vladdancea.com -> `http://backend:8080`. Ingress rules live in Cloudflare (`cf tunnels config get/update <id>`), the tunnel token is `TUNNEL_TOKEN` in the server `.env`. No ports are open to the internet.
 - GitHub environment `production` holds `VPS_DEPLOY_KEY` (secret), `VPS_HOST` and `VPS_KNOWN_HOSTS` (variables).
 
 ## Frontend Guidelines (vienna-pulse-frontend)
