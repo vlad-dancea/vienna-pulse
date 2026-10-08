@@ -45,3 +45,6 @@ Thumbs.db
 
 # Cloudflare Wrangler local state
 .wrangler/
+
+# Nx cache created by the spartan generators
+/.nx
