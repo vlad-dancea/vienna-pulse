@@ -55,6 +55,10 @@ jobs:
 
       - name: Build and test
         run: ./gradlew build
+        env:
+          # Testcontainers gives up on an image pull after 120 s. Wait up to
+          # 10 minutes so a short Docker Hub outage does not fail every test.
+          TESTCONTAINERS_PULL_TIMEOUT: "600"
 
       - name: Upload test reports
         if: failure()
