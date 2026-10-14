@@ -23,7 +23,7 @@
     "@spartan-ng/brain": "1.6.1",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
-    "maplibre-gl": "6.13.0",
+    "maplibre-gl": "6.14.0",
     "rxjs": "~7.8.0",
     "tailwind-merge": "^3.5.0",
     "tslib": "^2.3.0"
