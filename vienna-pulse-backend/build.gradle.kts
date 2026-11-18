@@ -26,7 +26,7 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-flyway")
 	implementation("org.flywaydb:flyway-database-postgresql")
 	implementation("org.postgresql:postgresql")
-	implementation("de.siegmar:fastcsv:4.4.0")
+	implementation("de.siegmar:fastcsv:4.4.1")
 	testImplementation("org.springframework.boot:spring-boot-starter-actuator-test")
 	testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
 	testImplementation("org.springframework.boot:spring-boot-testcontainers")
